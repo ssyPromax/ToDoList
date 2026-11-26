@@ -45,6 +45,10 @@
 | --- | --- | --- |
 | ![菜单](screenshots/07_menu.png) | ![历史日程](screenshots/08_history.png) | ![关于](screenshots/09_about.png) |
 
+| 检查更新 · 已是最新 | 检查更新 · 发现新版本 |
+| --- | --- |
+| ![已最新](screenshots/09_about.png) | ![有新版本](screenshots/10_update_check.png) |
+
 | 编辑事项 | 时间选择（浅色） | 时间选择（深色） |
 | --- | --- | --- |
 | ![编辑](screenshots/03_edit_dialog.png) | ![时间-浅色](screenshots/04_time_picker_light.png) | ![时间-深色](screenshots/05_time_picker_dark.png) |
