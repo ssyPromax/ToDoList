@@ -31,15 +31,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +67,7 @@ import com.dswork.list.data.relativeLabel
 import com.dswork.list.data.weekdayCn
 import com.dswork.list.ui.theme.LocalListPalette
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
@@ -572,11 +571,6 @@ private fun UnfinishedHeader(count: Int) {
                 color = palette.textSecondary,
             )
         }
-        Text(
-            text = "今天起 7 天内所有没做完的事项（含选中的那天）",
-            fontSize = 11.5.sp,
-            color = palette.textSecondary,
-        )
     }
 }
 
@@ -702,7 +696,6 @@ private fun TodoEditorDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListTimePickerDialog(
     initialMinutes: Int,
@@ -710,11 +703,8 @@ private fun ListTimePickerDialog(
     onConfirm: (minutes: Int) -> Unit,
 ) {
     val palette = LocalListPalette.current
-    val state = rememberTimePickerState(
-        initialHour = initialMinutes / 60,
-        initialMinute = initialMinutes % 60,
-        is24Hour = true,
-    )
+    var hour by remember { mutableStateOf(initialMinutes / 60) }
+    var minute by remember { mutableStateOf(initialMinutes % 60) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -723,10 +713,10 @@ private fun ListTimePickerDialog(
         Surface(
             shape = RoundedCornerShape(28.dp),
             color = palette.card,
-            modifier = Modifier.fillMaxWidth(0.92f),
+            modifier = Modifier.fillMaxWidth(0.9f),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+                modifier = Modifier.padding(horizontal = 22.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -735,21 +725,32 @@ private fun ListTimePickerDialog(
                     fontWeight = FontWeight.SemiBold,
                     color = palette.textPrimary,
                 )
-                Spacer(Modifier.height(10.dp))
-                TimePicker(
-                    state = state,
-                    colors = androidx.compose.material3.TimePickerDefaults.colors(
-                        clockDialColor = palette.background,
-                        clockDialSelectedContentColor = Color.White,
-                        clockDialContentColor = palette.textPrimary,
-                        selectorColor = palette.accent,
-                        containerColor = palette.card,
-                        timeSelectorSelectedContainerColor = palette.accentSoft,
-                        timeSelectorSelectedContentColor = palette.accent,
-                        timeSelectorContainerColor = palette.background,
-                        timeSelectorContentColor = palette.textPrimary,
-                    ),
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "%02d:%02d".format(hour, minute),
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.accent,
                 )
+                Spacer(Modifier.height(18.dp))
+
+                TimeSlider(
+                    label = "小时",
+                    valueText = "%02d 时".format(hour),
+                    value = hour,
+                    valueRange = 0f..23f,
+                    onChange = { hour = it },
+                )
+                Spacer(Modifier.height(10.dp))
+                TimeSlider(
+                    label = "分钟",
+                    valueText = "%02d 分".format(minute),
+                    value = minute,
+                    valueRange = 0f..59f,
+                    onChange = { minute = it },
+                )
+
+                Spacer(Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -762,7 +763,7 @@ private fun ListTimePickerDialog(
                     }
                     Spacer(Modifier.width(6.dp))
                     Button(
-                        onClick = { onConfirm(state.hour * 60 + state.minute) },
+                        onClick = { onConfirm(hour * 60 + minute) },
                         colors = ButtonDefaults.buttonColors(containerColor = palette.accent),
                     ) {
                         Text("确定")
@@ -770,5 +771,37 @@ private fun ListTimePickerDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TimeSlider(
+    label: String,
+    valueText: String,
+    value: Int,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onChange: (Int) -> Unit,
+) {
+    val palette = LocalListPalette.current
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, fontSize = 13.sp, color = palette.textSecondary)
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = valueText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = palette.accent,
+            )
+        }
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onChange(it.roundToInt()) },
+            valueRange = valueRange,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
