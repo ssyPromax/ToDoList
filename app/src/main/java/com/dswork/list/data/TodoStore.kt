@@ -20,6 +20,9 @@ class TodoStore(context: Context) {
         list.addAll(load())
     }
 
+    /** 数据变化回调（通知调度等需要跟随事项增删改同步）。 */
+    var onChange: (() -> Unit)? = null
+
     /** null 表示用户从未手动切换过，交给系统深色模式决定。 */
     val darkPref: Boolean?
         get() = if (prefs.contains(KEY_DARK)) prefs.getBoolean(KEY_DARK, false) else null
@@ -76,6 +79,7 @@ class TodoStore(context: Context) {
             )
         }
         prefs.edit().putString(KEY_ITEMS, array.toString()).apply()
+        onChange?.invoke()
     }
 
     private fun load(): List<Todo> {

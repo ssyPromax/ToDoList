@@ -14,7 +14,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.data.TodoStore
+import com.dswork.list.notify.NotificationScheduler
 import com.dswork.list.ui.HistoryScreen
 import com.dswork.list.ui.HomeScreen
 import com.dswork.list.ui.theme.ListTheme
@@ -26,6 +28,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val store = TodoStore(applicationContext)
+        val notifications = NotificationPrefs(applicationContext)
+
+        NotificationScheduler.ensureChannel(applicationContext)
+        // 事项增删改、完成状态变化后，重新安排提醒
+        store.onChange = {
+            NotificationScheduler.sync(applicationContext, store.items, notifications)
+        }
+        NotificationScheduler.sync(applicationContext, store.items, notifications)
 
         setContent {
             val systemDark = isSystemInDarkTheme()
@@ -46,6 +56,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     HomeScreen(
                         store = store,
+                        notifications = notifications,
                         dark = dark,
                         onToggleTheme = {
                             dark = !dark

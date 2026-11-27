@@ -62,11 +62,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.dswork.list.R
+import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.data.Todo
 import com.dswork.list.data.TodoStore
 import com.dswork.list.data.dateCn
 import com.dswork.list.data.relativeLabel
 import com.dswork.list.data.weekdayCn
+import com.dswork.list.notify.NotificationScheduler
 import com.dswork.list.ui.theme.LocalListPalette
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -74,11 +76,13 @@ import kotlin.math.roundToInt
 @Composable
 fun HomeScreen(
     store: TodoStore,
+    notifications: NotificationPrefs,
     dark: Boolean,
     onToggleTheme: () -> Unit,
     onOpenHistory: () -> Unit,
 ) {
     val palette = LocalListPalette.current
+    val context = LocalContext.current
     val today = LocalDate.now()
     var selectedEpochDay by rememberSaveable { mutableStateOf(today.toEpochDay()) }
     val selectedDay = LocalDate.ofEpochDay(selectedEpochDay)
@@ -87,6 +91,7 @@ fun HomeScreen(
     var editorOpen by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Todo?>(null) }
     var aboutOpen by remember { mutableStateOf(false) }
+    var notifyOpen by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -97,6 +102,7 @@ fun HomeScreen(
             Header(
                 dark = dark,
                 onToggleTheme = onToggleTheme,
+                onOpenNotifications = { notifyOpen = true },
                 onOpenHistory = onOpenHistory,
                 onOpenAbout = { aboutOpen = true },
             )
@@ -233,12 +239,23 @@ fun HomeScreen(
         }
         AboutDialog(versionName = versionName, onDismiss = { aboutOpen = false })
     }
+
+    if (notifyOpen) {
+        NotificationSettingsDialog(
+            prefs = notifications,
+            onDismiss = { notifyOpen = false },
+            onChanged = {
+                NotificationScheduler.sync(context, store.items, notifications)
+            },
+        )
+    }
 }
 
 @Composable
 private fun Header(
     dark: Boolean,
     onToggleTheme: () -> Unit,
+    onOpenNotifications: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
@@ -272,6 +289,14 @@ private fun Header(
                 contentDescription = if (dark) "切换到浅色模式" else "切换到深色模式",
                 tint = palette.textPrimary,
                 modifier = Modifier.size(24.dp),
+            )
+        }
+        IconButton(onClick = onOpenNotifications) {
+            Icon(
+                painter = painterResource(R.drawable.ic_bell),
+                contentDescription = "通知提醒设置",
+                tint = palette.textPrimary,
+                modifier = Modifier.size(22.dp),
             )
         }
         MoreMenu(onOpenHistory = onOpenHistory, onOpenAbout = onOpenAbout)
