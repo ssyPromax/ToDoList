@@ -44,10 +44,11 @@
 - 打开总开关时按需申请 Android 13+ 通知权限；没有精确闹钟权限时会退化为普通闹钟（±10 分钟窗口）；
 - 事项增删改、勾选完成、删除后立即重排所有提醒；重启手机后由 `BOOT_COMPLETED` 自动恢复。
 
-**7. 版本更新推送**
+**7. 版本更新推送 / 应用内更新**
 - App 启动时以及每天一次的后台检查会读取 GitHub Release 最新版本（12 小时节流，同一个版本只提醒一次）；
-- 发现新版本时推送通知「List 有新版本 vX.Y.Z」，点按直接打开 Release 页面下载；
-- 可在「通知提醒 → 版本更新」里单独关闭（默认开启），与待办提醒总开关互不影响。
+- 发现新版本时推送通知「List 有新版本 vX.Y.Z」，点按或点「立即更新」进入更新流程；
+- 「关于」里也提供**立即更新**按钮：应用内下载 Release 里的 APK → 校验包名 / versionCode / 签名 → 用 FileProvider 打开系统安装器，用户点「更新」即覆盖安装，本地数据保留（首次更新需允许一次「安装未知应用」）；
+- 可在「通知提醒 → 版本更新」里单独关闭更新推送（默认开启），与待办提醒总开关互不影响。
 
 **8. 关于 / 检查更新**
 - 三点菜单 → 关于：应用图标、版本号、简介、**GitHub 仓库地址**（可点击跳转浏览器）；
@@ -67,6 +68,10 @@
 | 版本更新推送 |
 | --- |
 | ![版本更新推送](screenshots/15_update_push.png) |
+
+| 应用内更新（关于页） | 系统安装器 |
+| --- | --- |
+| ![立即更新](screenshots/16_update_prompt.png) | ![安装器](screenshots/17_installer.png) |
 
 | 三点菜单 | 历史日程 | 关于 |
 | --- | --- | --- |
@@ -107,7 +112,7 @@ python make_icons.py \
 | 构建 | AGP 9.5.3 / Gradle 9.6.0 / JDK 17 字节码 |
 | SDK | compileSdk 37.2、targetSdk 37、minSdk 26（Android 8.0+） |
 | 依赖 | Compose BOM 2026.11.01 + activity-compose + core-ktx（无第三方网络库） |
-| 版本 | versionCode 8 / versionName 1.4.0 |
+| 版本 | versionCode 9 / versionName 1.5.0 |
 
 ## 目录结构
 
@@ -157,4 +162,5 @@ APK 见 [Releases](https://github.com/ssyPromax/ToDoList/releases)。
 - 三点菜单、历史日程（过去的安排按日期归档）、关于页与检查更新（GitHub API 返回「无发布 / 已是最新 / 有新版」三种状态均验证）；
 - 通知提醒：铃铛 → 设置页开关、Android 13 通知权限申请、四个开关持久化；AlarmManager 实测排出了 24h/12h/30m 三个精确闹钟，到点收到「待办提醒 · 还有 30 分钟」通知；已完成事项不排提醒；
 - 版本更新推送：临时发布 v1.9.9 后启动 App，实测收到「List 有新版本 v1.9.9」通知，点按可跳转 Release；每日检查闹钟（24h 重复）已注册；临时 Release 验证后已删除；
+- 应用内自动更新：临时发布带 APK 的 v1.9.9 后，在「关于」点「立即更新」→ 下载 13 MB 安装包 → 包名/版本/签名校验通过 → 系统安装器弹出 → 点「UPDATE」完成覆盖安装，`dumpsys package` 确认 versionName 变为 1.9.9；临时 Release 验证后已删除；
 - 启动器与应用抽屉中的 List 图标正确显示。

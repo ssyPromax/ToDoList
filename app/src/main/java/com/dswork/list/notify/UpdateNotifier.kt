@@ -80,35 +80,39 @@ object UpdateNotifier {
             if (prefs.getString(KEY_LAST_VERSION, null) == latest) return@Thread
 
             prefs.edit().putString(KEY_LAST_VERSION, latest).apply()
-            postUpdateNotification(
-                context = appContext,
-                version = latest,
-                url = info.releaseUrl ?: UpdateChecker.RELEASES_URL,
-            )
+            postUpdateNotification(context = appContext, version = latest)
         }.start()
     }
 
-    private fun postUpdateNotification(context: Context, version: String, url: String) {
+    private fun postUpdateNotification(context: Context, version: String) {
         ensureChannel(context)
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
 
-        val openRelease = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val openApp = Intent(context, com.dswork.list.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_UPDATE_VERSION, version)
         }
         val contentIntent = PendingIntent.getActivity(
             context,
             REQUEST_CODE,
-            openRelease,
+            openApp,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val installIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_CODE + 1,
+            openApp,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle("List 有新版本 v$version")
-            .setContentText("点按前往 GitHub 查看更新内容并下载")
+            .setContentText("点按下载并安装更新")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .setContentIntent(contentIntent)
+            .addAction(R.drawable.ic_bell, "立即更新", installIntent)
             .build()
 
         runCatching {
@@ -121,4 +125,7 @@ object UpdateNotifier {
     }.getOrNull()
 
     private const val REQUEST_CODE = 9527
+
+    /** 通知点开后传给 MainActivity 的版本号。 */
+    const val EXTRA_UPDATE_VERSION = "extra_update_version"
 }

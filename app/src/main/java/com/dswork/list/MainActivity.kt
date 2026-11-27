@@ -1,5 +1,6 @@
 package com.dswork.list
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -20,13 +21,19 @@ import com.dswork.list.notify.NotificationScheduler
 import com.dswork.list.notify.UpdateNotifier
 import com.dswork.list.ui.HistoryScreen
 import com.dswork.list.ui.HomeScreen
+import com.dswork.list.ui.UpdatePromptDialog
 import com.dswork.list.ui.theme.ListTheme
 
 class MainActivity : ComponentActivity() {
 
+    /** 从更新通知点进来时，记录要提示安装的版本。 */
+    private var pendingUpdateVersion by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        pendingUpdateVersion = intent?.getStringExtra(UpdateNotifier.EXTRA_UPDATE_VERSION)
 
         val store = TodoStore(applicationContext)
         val notifications = NotificationPrefs(applicationContext)
@@ -71,7 +78,22 @@ class MainActivity : ComponentActivity() {
                         onOpenHistory = { showHistory = true },
                     )
                 }
+
+                pendingUpdateVersion?.let { version ->
+                    UpdatePromptDialog(
+                        version = version,
+                        onDismiss = { pendingUpdateVersion = null },
+                    )
+                }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra(UpdateNotifier.EXTRA_UPDATE_VERSION)?.let {
+            pendingUpdateVersion = it
         }
     }
 }

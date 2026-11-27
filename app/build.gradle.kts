@@ -12,8 +12,8 @@ android {
         applicationId = "com.dswork.list"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "1.4.0"
+        versionCode = 9
+        versionName = "1.5.0"
     }
 
     buildTypes {
