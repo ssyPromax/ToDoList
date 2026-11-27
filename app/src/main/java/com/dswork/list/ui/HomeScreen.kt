@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -39,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -99,79 +101,98 @@ fun HomeScreen(
                 onOpenAbout = { aboutOpen = true },
             )
 
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(days, key = { it.toEpochDay() }) { day ->
-                    DayCard(
-                        day = day,
-                        today = today,
-                        selected = day == selectedDay,
-                        todos = store.itemsFor(day),
-                        onClick = { selectedEpochDay = day.toEpochDay() },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            SectionHeader(
-                day = selectedDay,
-                todos = store.itemsFor(selectedDay),
-                today = today,
-                onAdd = {
-                    editing = null
-                    editorOpen = true
-                },
-            )
-
             val dayTodos = store.itemsFor(selectedDay)
             val weekUnfinished = store.items
                 .filter { !it.done && it.date in days }
                 .sortedWith(compareBy({ it.date }, { it.minutes }, { it.id }))
 
+            val dayStripState = rememberLazyListState()
+            LaunchedEffect(selectedEpochDay) {
+                val index = days.indexOfFirst { it.toEpochDay() == selectedEpochDay }
+                if (index >= 0) dayStripState.animateScrollToItem(index)
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 28.dp),
+                contentPadding = PaddingValues(bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                item(key = "day-strip") {
+                    LazyRow(
+                        state = dayStripState,
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        items(days, key = { it.toEpochDay() }) { day ->
+                            DayCard(
+                                day = day,
+                                today = today,
+                                selected = day == selectedDay,
+                                todos = store.itemsFor(day),
+                                onClick = { selectedEpochDay = day.toEpochDay() },
+                            )
+                        }
+                    }
+                }
+
+                item(key = "section-header") {
+                    SectionHeader(
+                        day = selectedDay,
+                        todos = store.itemsFor(selectedDay),
+                        today = today,
+                        onAdd = {
+                            editing = null
+                            editorOpen = true
+                        },
+                    )
+                }
+
                 if (dayTodos.isEmpty()) {
                     item(key = "selected-empty") {
-                        EmptyState(isToday = selectedDay == today)
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                            EmptyState(isToday = selectedDay == today)
+                        }
                     }
                 } else {
                     items(dayTodos, key = { "selected-${it.id}" }) { todo ->
-                        TodoRow(
-                            todo = todo,
-                            onToggle = { store.toggle(todo.id) },
-                            onClick = {
-                                editing = todo
-                                editorOpen = true
-                            },
-                        )
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                            TodoRow(
+                                todo = todo,
+                                onToggle = { store.toggle(todo.id) },
+                                onClick = {
+                                    editing = todo
+                                    editorOpen = true
+                                },
+                            )
+                        }
                     }
                 }
 
                 item(key = "unfinished-header") {
-                    UnfinishedHeader(count = weekUnfinished.size)
+                    Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                        UnfinishedHeader(count = weekUnfinished.size)
+                    }
                 }
 
                 if (weekUnfinished.isEmpty()) {
                     item(key = "unfinished-empty") {
-                        UnfinishedEmpty()
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                            UnfinishedEmpty()
+                        }
                     }
                 } else {
                     items(weekUnfinished, key = { "unfinished-${it.id}" }) { todo ->
-                        TodoRow(
-                            todo = todo,
-                            onToggle = { store.toggle(todo.id) },
-                            onClick = {
-                                editing = todo
-                                editorOpen = true
-                            },
-                        )
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                            TodoRow(
+                                todo = todo,
+                                onToggle = { store.toggle(todo.id) },
+                                onClick = {
+                                    editing = todo
+                                    editorOpen = true
+                                },
+                            )
+                        }
                     }
                 }
             }
