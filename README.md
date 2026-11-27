@@ -164,3 +164,14 @@ APK 见 [Releases](https://github.com/ssyPromax/ToDoList/releases)。
 - 版本更新推送：临时发布 v1.9.9 后启动 App，实测收到「List 有新版本 v1.9.9」通知，点按可跳转 Release；每日检查闹钟（24h 重复）已注册；临时 Release 验证后已删除；
 - 应用内自动更新：临时发布带 APK 的 v1.9.9 后，在「关于」点「立即更新」→ 下载 13 MB 安装包 → 包名/版本/签名校验通过 → 系统安装器弹出 → 点「UPDATE」完成覆盖安装，`dumpsys package` 确认 versionName 变为 1.9.9；临时 Release 验证后已删除；
 - 启动器与应用抽屉中的 List 图标正确显示。
+
+---
+
+## 许可证
+
+本项目采用 [GNU General Public License v3.0](LICENSE)（GPL-3.0）。
+
+Copyright (C) 2026 ssyPromax
+
+你可以自由使用、修改和分发本项目的代码；如果你分发修改后的版本，
+必须以同样的 GPL-3.0 协议公开源代码。
