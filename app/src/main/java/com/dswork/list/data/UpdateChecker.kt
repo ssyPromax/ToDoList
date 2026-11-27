@@ -6,7 +6,10 @@ import java.net.URL
 
 /**
  * 从 GitHub Releases 读取最新版本，用于「关于 → 检查更新」。
- * 不引入第三方网络库，直接用 HttpURLConnection。
+ *
+ * 优先用网页的 `releases/latest` 重定向（不消耗 GitHub API 配额，60 次/小时的匿名
+ * API 限流经常被同一出口 IP 打满）；拿到 Location 里的 tag 即可判断版本。
+ * 重定向方式失败时再回退到 api.github.com，顺便取 release 说明。
  */
 object UpdateChecker {
 
@@ -23,6 +26,56 @@ object UpdateChecker {
     )
 
     fun check(): Info {
+        val viaRedirect = checkViaRedirect()
+        if (viaRedirect.error == null) return viaRedirect
+        val viaApi = checkViaApi()
+        return if (viaApi.error == null) viaApi else viaRedirect
+    }
+
+    /** 读取 https://github.com/{owner}/{repo}/releases/latest 的 302 Location。 */
+    private fun checkViaRedirect(): Info {
+        val connection = try {
+            (URL("$REPO_URL/releases/latest").openConnection() as HttpURLConnection)
+        } catch (e: Exception) {
+            return Info(error = "网络不可用")
+        }
+
+        return try {
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) List/App")
+
+            when (val code = connection.responseCode) {
+                in 300..399 -> {
+                    val location = connection.getHeaderField("Location").orEmpty()
+                    val tag = location.substringAfter("/tag/", "")
+                        .substringBefore("?")
+                        .substringBefore("#")
+                        .trim()
+                    if (tag.isNotBlank()) {
+                        Info(
+                            latestVersion = tag.removePrefix("v").removePrefix("V"),
+                            releaseUrl = location.ifBlank { RELEASES_URL },
+                        )
+                    } else {
+                        Info(error = "没解析到版本号")
+                    }
+                }
+                404 -> Info(error = "仓库还没有发布版本")
+                403 -> Info(error = "接口被限流，稍后再试")
+                else -> Info(error = "HTTP $code")
+            }
+        } catch (e: Exception) {
+            Info(error = "检查失败：${e.javaClass.simpleName}")
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** 回退方案：GitHub REST API（附带 release 说明，但受 60 次/小时匿名限流）。 */
+    private fun checkViaApi(): Info {
         val connection = try {
             (URL("https://api.github.com/repos/$OWNER/$REPO_NAME/releases/latest").openConnection() as HttpURLConnection)
         } catch (e: Exception) {
@@ -37,6 +90,7 @@ object UpdateChecker {
 
             when (val code = connection.responseCode) {
                 404 -> Info(error = "仓库还没有发布版本")
+                403 -> Info(error = "接口被限流，稍后再试")
                 in 200..299 -> {
                     val body = connection.inputStream.bufferedReader().use { it.readText() }
                     val json = JSONObject(body)

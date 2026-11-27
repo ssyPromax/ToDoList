@@ -40,7 +40,8 @@
 
 **6. 关于 / 检查更新**
 - 三点菜单 → 关于：应用图标、版本号、简介、**GitHub 仓库地址**（可点击跳转浏览器）；
-- **检查更新**按钮会读取 GitHub Releases 上最新的 release 版本号：一致时提示「已是最新版本」，有新版时显示版本号并给出「前往下载新版本」入口，网络异常/无发布时给出对应提示。
+- **检查更新**按钮会读取 GitHub Releases 上最新的 release 版本号：一致时提示「已是最新版本」，有新版时显示版本号并给出「前往下载新版本」入口，网络异常/无发布时给出对应提示；
+- 版本检查优先走 `releases/latest` 的网页重定向（不消耗 GitHub API 限额），失败再回退到 REST API，避免匿名 60 次/小时限流导致误报。
 
 **7. 数据**
 - 使用 `SharedPreferences + JSON` 本地保存，不联网（只有「检查更新」会访问 GitHub API），无敏感权限，进程被杀后数据仍在。
@@ -86,7 +87,7 @@ python make_icons.py \
 | 构建 | AGP 9.5.3 / Gradle 9.6.0 / JDK 17 字节码 |
 | SDK | compileSdk 37.2、targetSdk 37、minSdk 26（Android 8.0+） |
 | 依赖 | Compose BOM 2026.11.01 + activity-compose + core-ktx（无第三方网络库） |
-| 版本 | versionCode 3 / versionName 1.2 |
+| 版本 | versionCode 4 / versionName 1.2.1 |
 
 ## 目录结构
 
