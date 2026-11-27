@@ -30,6 +30,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".notify.UpdateCheckReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".notify.BootReceiver"
             android:enabled="true"
             android:exported="true">

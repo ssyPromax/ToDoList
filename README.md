@@ -44,12 +44,17 @@
 - 打开总开关时按需申请 Android 13+ 通知权限；没有精确闹钟权限时会退化为普通闹钟（±10 分钟窗口）；
 - 事项增删改、勾选完成、删除后立即重排所有提醒；重启手机后由 `BOOT_COMPLETED` 自动恢复。
 
-**7. 关于 / 检查更新**
+**7. 版本更新推送**
+- App 启动时以及每天一次的后台检查会读取 GitHub Release 最新版本（12 小时节流，同一个版本只提醒一次）；
+- 发现新版本时推送通知「List 有新版本 vX.Y.Z」，点按直接打开 Release 页面下载；
+- 可在「通知提醒 → 版本更新」里单独关闭（默认开启），与待办提醒总开关互不影响。
+
+**8. 关于 / 检查更新**
 - 三点菜单 → 关于：应用图标、版本号、简介、**GitHub 仓库地址**（可点击跳转浏览器）；
 - **检查更新**按钮会读取 GitHub Releases 上最新的 release 版本号：一致时提示「已是最新版本」，有新版时显示版本号并给出「前往下载新版本」入口，网络异常/无发布时给出对应提示；
 - 版本检查优先走 `releases/latest` 的网页重定向（不消耗 GitHub API 限额），失败再回退到 REST API，避免匿名 60 次/小时限流导致误报。
 
-**8. 数据**
+**9. 数据**
 - 使用 `SharedPreferences + JSON` 本地保存，不联网（只有「检查更新」会访问 GitHub API），进程被杀后数据仍在；
 - 通知提醒完全本地（AlarmManager + 通知渠道），除系统通知/重启权限外不申请敏感权限。
 
@@ -58,6 +63,10 @@
 | 通知提醒设置（浅色） | 通知提醒设置（深色） | 到点提醒 |
 | --- | --- | --- |
 | ![通知设置](screenshots/12_notification_settings.png) | ![通知设置-深色](screenshots/14_notification_settings_dark.png) | ![通知](screenshots/13_notification.png) |
+
+| 版本更新推送 |
+| --- |
+| ![版本更新推送](screenshots/15_update_push.png) |
 
 | 三点菜单 | 历史日程 | 关于 |
 | --- | --- | --- |
@@ -98,7 +107,7 @@ python make_icons.py \
 | 构建 | AGP 9.5.3 / Gradle 9.6.0 / JDK 17 字节码 |
 | SDK | compileSdk 37.2、targetSdk 37、minSdk 26（Android 8.0+） |
 | 依赖 | Compose BOM 2026.11.01 + activity-compose + core-ktx（无第三方网络库） |
-| 版本 | versionCode 7 / versionName 1.3.0 |
+| 版本 | versionCode 8 / versionName 1.4.0 |
 
 ## 目录结构
 
@@ -147,4 +156,5 @@ APK 见 [Releases](https://github.com/ssyPromax/ToDoList/releases)。
 - 勾选后划掉并更新「已完成」计数；重启进程后数据、主题均保留；
 - 三点菜单、历史日程（过去的安排按日期归档）、关于页与检查更新（GitHub API 返回「无发布 / 已是最新 / 有新版」三种状态均验证）；
 - 通知提醒：铃铛 → 设置页开关、Android 13 通知权限申请、四个开关持久化；AlarmManager 实测排出了 24h/12h/30m 三个精确闹钟，到点收到「待办提醒 · 还有 30 分钟」通知；已完成事项不排提醒；
+- 版本更新推送：临时发布 v1.9.9 后启动 App，实测收到「List 有新版本 v1.9.9」通知，点按可跳转 Release；每日检查闹钟（24h 重复）已注册；临时 Release 验证后已删除；
 - 启动器与应用抽屉中的 List 图标正确显示。

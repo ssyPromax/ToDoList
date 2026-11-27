@@ -27,6 +27,10 @@ class NotificationPrefs(context: Context) {
     var before30m by mutableStateOf(prefs.getBoolean(KEY_30M, true))
         private set
 
+    /** 发现新版本时是否推送通知（与待办提醒总开关相互独立）。 */
+    var updateNotifyEnabled by mutableStateOf(prefs.getBoolean(KEY_UPDATE_NOTIFY, true))
+        private set
+
     /** 当前开启的提前量（毫秒）。 */
     val enabledOffsets: List<Long>
         get() = buildList {
@@ -55,6 +59,11 @@ class NotificationPrefs(context: Context) {
         prefs.edit().putBoolean(KEY_30M, value).apply()
     }
 
+    fun updateUpdateNotify(value: Boolean) {
+        updateNotifyEnabled = value
+        prefs.edit().putBoolean(KEY_UPDATE_NOTIFY, value).apply()
+    }
+
     companion object {
         const val HOURS_24 = 24L * 60 * 60 * 1000
         const val HOURS_12 = 12L * 60 * 60 * 1000
@@ -64,5 +73,6 @@ class NotificationPrefs(context: Context) {
         private const val KEY_24H = "before_24h"
         private const val KEY_12H = "before_12h"
         private const val KEY_30M = "before_30m"
+        private const val KEY_UPDATE_NOTIFY = "update_notify"
     }
 }

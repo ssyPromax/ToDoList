@@ -136,6 +136,21 @@ fun NotificationSettingsDialog(
                         },
                     )
                 }
+                Spacer(Modifier.height(14.dp))
+                Column {
+                    Text(
+                        text = "版本更新",
+                        fontSize = 12.sp,
+                        color = palette.textSecondary,
+                        modifier = Modifier.padding(bottom = 2.dp),
+                    )
+                    SettingSwitchRow(
+                        title = "有新版本时通知我",
+                        subtitle = "每天自动检查一次 GitHub Release",
+                        checked = prefs.updateNotifyEnabled,
+                        onCheckedChange = { prefs.updateUpdateNotify(it) },
+                    )
+                }
                 if (permissionDenied) {
                     Text(
                         text = "通知权限被拒绝，请到系统设置 → 应用 → List → 通知中开启。",

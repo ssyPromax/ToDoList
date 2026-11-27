@@ -19,5 +19,7 @@ class BootReceiver : BroadcastReceiver() {
         val store = TodoStore(appContext)
         val prefs = NotificationPrefs(appContext)
         NotificationScheduler.sync(appContext, store.items, prefs)
+        UpdateNotifier.ensureChannel(appContext)
+        UpdateNotifier.scheduleDailyCheck(appContext)
     }
 }

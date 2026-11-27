@@ -17,6 +17,7 @@ import androidx.core.view.WindowCompat
 import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.data.TodoStore
 import com.dswork.list.notify.NotificationScheduler
+import com.dswork.list.notify.UpdateNotifier
 import com.dswork.list.ui.HistoryScreen
 import com.dswork.list.ui.HomeScreen
 import com.dswork.list.ui.theme.ListTheme
@@ -36,6 +37,11 @@ class MainActivity : ComponentActivity() {
             NotificationScheduler.sync(applicationContext, store.items, notifications)
         }
         NotificationScheduler.sync(applicationContext, store.items, notifications)
+
+        // 版本更新：每天检查一次；启动时也顺带检查（内部 12 小时节流）
+        UpdateNotifier.ensureChannel(applicationContext)
+        UpdateNotifier.scheduleDailyCheck(applicationContext)
+        UpdateNotifier.checkAndNotify(applicationContext)
 
         setContent {
             val systemDark = isSystemInDarkTheme()
