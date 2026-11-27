@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dswork.list.BuildConfig
 import com.dswork.list.R
 import com.dswork.list.data.UpdateChecker
 import com.dswork.list.notify.ApkUpdater
@@ -107,6 +108,7 @@ fun AboutDialog(versionName: String, onDismiss: () -> Unit) {
                         uriHandler.openUri(UpdateChecker.REPO_URL)
                     },
                 )
+                if (BuildConfig.SELF_UPDATE) {
                 Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
@@ -200,6 +202,7 @@ fun AboutDialog(versionName: String, onDismiss: () -> Unit) {
                             )
                         }
                     }
+                }
                 }
             }
         },

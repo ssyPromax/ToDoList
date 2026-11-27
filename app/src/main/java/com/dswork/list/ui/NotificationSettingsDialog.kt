@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -31,9 +33,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.ui.theme.LocalListPalette
+import kotlin.math.roundToInt
 
 /**
- * 通知提醒设置：总开关 + 三个提前量开关（24 小时 / 12 小时 / 30 分钟）。
+ * 通知提醒设置：总开关 + 三个提前量（24 小时 / 30 分钟 / 自定义 N 小时）。
  * 打开总开关时会请求 Android 13+ 的通知权限。
  */
 @Composable
@@ -45,6 +48,7 @@ fun NotificationSettingsDialog(
     val palette = LocalListPalette.current
     val context = LocalContext.current
     var permissionDenied by remember { mutableStateOf(false) }
+    var editingCustomHours by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -116,24 +120,25 @@ fun NotificationSettingsDialog(
                         },
                     )
                     SettingSwitchRow(
-                        title = "提前 12 小时",
-                        subtitle = "例如明天 9:00 的事项，今天 21:00 提醒",
-                        checked = prefs.before12h,
-                        enabled = prefs.enabled,
-                        onCheckedChange = {
-                            prefs.updateBefore12h(it)
-                            onChanged()
-                        },
-                    )
-                    SettingSwitchRow(
                         title = "提前 30 分钟",
-                        subtitle = "即将开始时再提醒一次",
+                        subtitle = "即将开始时，提前半小时再提醒一次",
                         checked = prefs.before30m,
                         enabled = prefs.enabled,
                         onCheckedChange = {
                             prefs.updateBefore30m(it)
                             onChanged()
                         },
+                    )
+                    SettingSwitchRow(
+                        title = "提前 ${prefs.customHours} 小时",
+                        subtitle = "点按自定义提前的小时数（1–24）",
+                        checked = prefs.customEnabled,
+                        enabled = prefs.enabled,
+                        onCheckedChange = {
+                            prefs.updateCustomEnabled(it)
+                            onChanged()
+                        },
+                        onTitleClick = { editingCustomHours = true },
                     )
                 }
                 Spacer(Modifier.height(14.dp))
@@ -175,6 +180,76 @@ fun NotificationSettingsDialog(
             }
         },
     )
+
+    if (editingCustomHours) {
+        CustomHoursDialog(
+            current = prefs.customHours,
+            onDismiss = { editingCustomHours = false },
+            onConfirm = { hours ->
+                prefs.updateCustomHours(hours)
+                editingCustomHours = false
+                onChanged()
+            },
+        )
+    }
+}
+
+/** 自定义「提前 N 小时」：1–24 小时滑动条。 */
+@Composable
+private fun CustomHoursDialog(
+    current: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    val palette = LocalListPalette.current
+    var hours by remember { mutableStateOf(current) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = palette.card,
+        titleContentColor = palette.textPrimary,
+        textContentColor = palette.textSecondary,
+        title = {
+            Text(
+                text = "自定义提前时间",
+                fontSize = 19.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.textPrimary,
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "提前 $hours 小时提醒",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = palette.accent,
+                    modifier = Modifier.padding(vertical = 6.dp),
+                )
+                Slider(
+                    value = hours.toFloat(),
+                    onValueChange = { hours = it.roundToInt().coerceIn(NotificationPrefs.MIN_CUSTOM_HOURS, NotificationPrefs.MAX_CUSTOM_HOURS) },
+                    valueRange = NotificationPrefs.MIN_CUSTOM_HOURS.toFloat()..NotificationPrefs.MAX_CUSTOM_HOURS.toFloat(),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    text = "范围 1–24 小时，只对未完成的事项生效",
+                    fontSize = 12.sp,
+                    color = palette.textSecondary,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(hours) }) {
+                Text("确定", color = palette.accent)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消", color = palette.textSecondary)
+            }
+        },
+    )
 }
 
 @Composable
@@ -183,6 +258,7 @@ private fun SettingSwitchRow(
     subtitle: String,
     checked: Boolean,
     enabled: Boolean = true,
+    onTitleClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val palette = LocalListPalette.current
@@ -192,7 +268,11 @@ private fun SettingSwitchRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .then(if (onTitleClick != null) Modifier.clickable(onClick = onTitleClick) else Modifier),
+        ) {
             Text(
                 text = title,
                 fontSize = 15.sp,

@@ -39,7 +39,8 @@
 - 顶部返回按钮/系统返回键均可回到主界面。
 
 **6. 通知提醒**
-- 顶栏铃铛 → 通知提醒设置：一个总开关 + 「提前 24 小时 / 提前 12 小时 / 提前 30 分钟」三个开关；
+- 顶栏铃铛 → 通知提醒设置：一个总开关 + 「提前 24 小时 / 提前 30 分钟 / 提前 N 小时（自定义）」三个开关；
+- 第三个提前量可自己定：点「提前 N 小时」那一行弹出 1–24 小时滑动条，确定后立即按新小时数重排提醒；
 - 只对**未完成**的事项发送；在截止时间的对应提前量各提醒一次，通知内容包含事项标题和「几月几号 周X 时间」；
 - 打开总开关时按需申请 Android 13+ 通知权限；没有精确闹钟权限时会退化为普通闹钟（±10 分钟窗口）；
 - 事项增删改、勾选完成、删除后立即重排所有提醒；重启手机后由 `BOOT_COMPLETED` 自动恢复。
@@ -65,6 +66,10 @@
 | --- | --- | --- |
 | ![通知设置](screenshots/12_notification_settings.png) | ![通知设置-深色](screenshots/14_notification_settings_dark.png) | ![通知](screenshots/13_notification.png) |
 
+| 自定义提前小时数 |
+| --- |
+| ![自定义小时](screenshots/18_custom_hours.png) |
+
 | 版本更新推送 |
 | --- |
 | ![版本更新推送](screenshots/15_update_push.png) |
@@ -85,24 +90,19 @@
 | --- | --- | --- |
 | ![编辑](screenshots/03_edit_dialog.png) | ![时间-浅色](screenshots/04_time_picker_light.png) | ![时间-深色](screenshots/05_time_picker_dark.png) |
 
-启动器图标（`TO / DO`，天空照片 + 1/128 虚化 + 5% 白蒙版，字色 `#2E2620`）：
+启动器图标（`TO / DO`，天空照片 + 1/128 虚化 + 5% 白蒙版，字色 `#2E2620`，等宽字母按列对齐）：
 
 ![应用图标](screenshots/app_icon_512.png)
 
 ## 应用图标
 
-由 `photo-wash-icon` 技能生成：
+由 `photo-wash-icon` 技能生成（默认等宽字体 + 列对齐：`T` 正对 `D`、`O` 正对 `O`，不再左右错位）：
 
 ```bash
-python make_icons.py \
-  --background tools/assets/background.jpg \
-  --res app/src/main/res \
-  --line1 TO --line2 DO \
-  --blur-div 128 --mask-alpha 13 \
-  --preview tools/assets/icon_preview_512.png
+python tools/make_icons.py
 ```
 
-产出 `mipmap-mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi/ic_launcher.png`（48/72/96/144/192 px）。界面顶栏图标与启动器图标共用同一个 `@mipmap/ic_launcher` 资源。原始照片只保留在本地 `tools/assets/`（未提交仓库），仓库里只有生成后的图标。
+`tools/make_icons.py` 是对技能脚本的薄封装，固定参数为 `TO / DO`、虚化 1/128、白蒙版 5%（alpha 13）、4% 行距；产出 `mipmap-mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi/ic_launcher.png`（48/72/96/144/192 px）。界面顶栏图标与启动器图标共用同一个 `@mipmap/ic_launcher` 资源。原始照片只保留在本地 `tools/assets/`（未提交仓库），仓库里只有生成后的图标。
 
 ## 技术栈
 
@@ -112,7 +112,7 @@ python make_icons.py \
 | 构建 | AGP 9.5.3 / Gradle 9.6.0 / JDK 17 字节码 |
 | SDK | compileSdk 37.2、targetSdk 37、minSdk 26（Android 8.0+） |
 | 依赖 | Compose BOM 2026.11.01 + activity-compose + core-ktx（无第三方网络库） |
-| 版本 | versionCode 9 / versionName 1.5.0 |
+| 版本 | versionCode 10 / versionName 1.5.1 |
 
 ## 目录结构
 
@@ -160,7 +160,8 @@ APK 见 [Releases](https://github.com/ssyPromax/ToDoList/releases)。
 - 新建 / 编辑 / 删除事项，改时间后自动重新排序；
 - 勾选后划掉并更新「已完成」计数；重启进程后数据、主题均保留；
 - 三点菜单、历史日程（过去的安排按日期归档）、关于页与检查更新（GitHub API 返回「无发布 / 已是最新 / 有新版」三种状态均验证）；
-- 通知提醒：铃铛 → 设置页开关、Android 13 通知权限申请、四个开关持久化；AlarmManager 实测排出了 24h/12h/30m 三个精确闹钟，到点收到「待办提醒 · 还有 30 分钟」通知；已完成事项不排提醒；
+- 通知提醒：铃铛 → 设置页开关、Android 13 通知权限申请、开关持久化；v1.3 时实测排出 24h/12h/30m 三个精确闹钟并收到「待办提醒 · 还有 30 分钟」通知；已完成事项不排提醒；
+- 自定义提前量：滑块设为 8 小时后，设置页即时显示「提前 8 小时」，`dumpsys alarm` 确认重排为 24h / 8h / 30min 三个精确闹钟；
 - 版本更新推送：临时发布 v1.9.9 后启动 App，实测收到「List 有新版本 v1.9.9」通知，点按可跳转 Release；每日检查闹钟（24h 重复）已注册；临时 Release 验证后已删除；
 - 应用内自动更新：临时发布带 APK 的 v1.9.9 后，在「关于」点「立即更新」→ 下载 13 MB 安装包 → 包名/版本/签名校验通过 → 系统安装器弹出 → 点「UPDATE」完成覆盖安装，`dumpsys package` 确认 versionName 变为 1.9.9；临时 Release 验证后已删除；
 - 启动器与应用抽屉中的 List 图标正确显示。
@@ -175,3 +176,4 @@ Copyright (C) 2026 ssyPromax
 
 你可以自由使用、修改和分发本项目的代码；如果你分发修改后的版本，
 必须以同样的 GPL-3.0 协议公开源代码。
+

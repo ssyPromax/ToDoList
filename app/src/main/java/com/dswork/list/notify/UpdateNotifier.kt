@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.dswork.list.BuildConfig
 import com.dswork.list.R
 import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.data.UpdateChecker
@@ -64,6 +65,8 @@ object UpdateNotifier {
 
     /** 后台检查版本；节流、去重后按需发通知。 */
     fun checkAndNotify(context: Context) {
+        // 商店渠道由应用商店负责更新；这里的自更新通道整体关闭。
+        if (!BuildConfig.SELF_UPDATE) return
         val appContext = context.applicationContext
         val prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()

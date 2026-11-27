@@ -3,6 +3,7 @@ package com.dswork.list.notify
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.dswork.list.BuildConfig
 import com.dswork.list.data.NotificationPrefs
 import com.dswork.list.data.TodoStore
 
@@ -19,7 +20,9 @@ class BootReceiver : BroadcastReceiver() {
         val store = TodoStore(appContext)
         val prefs = NotificationPrefs(appContext)
         NotificationScheduler.sync(appContext, store.items, prefs)
-        UpdateNotifier.ensureChannel(appContext)
-        UpdateNotifier.scheduleDailyCheck(appContext)
+        if (BuildConfig.SELF_UPDATE) {
+            UpdateNotifier.ensureChannel(appContext)
+            UpdateNotifier.scheduleDailyCheck(appContext)
+        }
     }
 }

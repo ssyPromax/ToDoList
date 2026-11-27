@@ -37,10 +37,13 @@ class ReminderReceiver : BroadcastReceiver() {
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
         NotificationScheduler.ensureChannel(context)
 
-        val head = when (offsetMillis) {
-            NotificationPrefs.HOURS_24 -> "还有 24 小时"
-            NotificationPrefs.HOURS_12 -> "还有 12 小时"
-            NotificationPrefs.MINUTES_30 -> "还有 30 分钟"
+        val head = when {
+            offsetMillis >= NotificationPrefs.HOUR_MS &&
+                offsetMillis % NotificationPrefs.HOUR_MS == 0L ->
+                "还有 ${offsetMillis / NotificationPrefs.HOUR_MS} 小时"
+            offsetMillis >= NotificationPrefs.MINUTE_MS &&
+                offsetMillis % NotificationPrefs.MINUTE_MS == 0L ->
+                "还有 ${offsetMillis / NotificationPrefs.MINUTE_MS} 分钟"
             else -> "即将开始"
         }
 

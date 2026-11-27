@@ -12,5 +12,7 @@
 *.aab
 *.keystore
 *.jks
+/keystore/
+keystore.properties
 /dist/
 /tools/

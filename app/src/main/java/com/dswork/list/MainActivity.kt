@@ -45,10 +45,13 @@ class MainActivity : ComponentActivity() {
         }
         NotificationScheduler.sync(applicationContext, store.items, notifications)
 
-        // 版本更新：每天检查一次；启动时也顺带检查（内部 12 小时节流）
-        UpdateNotifier.ensureChannel(applicationContext)
-        UpdateNotifier.scheduleDailyCheck(applicationContext)
-        UpdateNotifier.checkAndNotify(applicationContext)
+        // 版本更新：每天检查一次；启动时也顺带检查（内部 12 小时节流）。
+        // 商店渠道（SELF_UPDATE=false）由应用商店负责更新，不启用这条通道。
+        if (BuildConfig.SELF_UPDATE) {
+            UpdateNotifier.ensureChannel(applicationContext)
+            UpdateNotifier.scheduleDailyCheck(applicationContext)
+            UpdateNotifier.checkAndNotify(applicationContext)
+        }
 
         setContent {
             val systemDark = isSystemInDarkTheme()
