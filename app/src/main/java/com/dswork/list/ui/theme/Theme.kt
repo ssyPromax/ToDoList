@@ -5,47 +5,16 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 
-/** 应用自己的配色，深浅两套。 */
-data class ListPalette(
-    val background: Color,
-    val card: Color,
-    val border: Color,
-    val textPrimary: Color,
-    val textSecondary: Color,
-    val selectedCard: Color,
-    val onSelected: Color,
-    val accent: Color,
-    val accentSoft: Color,
-    val danger: Color,
-)
+/**
+ * 配色来自 dswork-suite 设计令牌（`suite/design/tokens.json`），
+ * 由 gen.py 生成到 DsTokens.kt。本文件只负责"令牌 -> Material3 主题"的映射，
+ * 不再硬编码色值；改颜色请改 tokens.json 后重新生成。
+ */
+typealias ListPalette = DsPalette
 
-val LightPalette = ListPalette(
-    background = Color(0xFFF3F1F8),
-    card = Color(0xFFFFFFFF),
-    border = Color(0xFFE4DFEC),
-    textPrimary = Color(0xFF1F1B24),
-    textSecondary = Color(0xFF7B7488),
-    selectedCard = Color(0xFF2E2620),
-    onSelected = Color(0xFFF7F3EC),
-    accent = Color(0xFF3F8F4F),
-    accentSoft = Color(0xFFE4F2E6),
-    danger = Color(0xFFC2504A),
-)
-
-val DarkPalette = ListPalette(
-    background = Color(0xFF121016),
-    card = Color(0xFF1D1924),
-    border = Color(0xFF2E2938),
-    textPrimary = Color(0xFFEFEBF5),
-    textSecondary = Color(0xFF9C94AA),
-    selectedCard = Color(0xFFEDE7F3),
-    onSelected = Color(0xFF1B1620),
-    accent = Color(0xFF6BC47E),
-    accentSoft = Color(0xFF23331F),
-    danger = Color(0xFFE27C74),
-)
+val LightPalette = DsLightPalette
+val DarkPalette = DsDarkPalette
 
 val LocalListPalette = staticCompositionLocalOf { LightPalette }
 
@@ -55,7 +24,7 @@ fun ListTheme(dark: Boolean, content: @Composable () -> Unit) {
     val scheme = if (dark) {
         darkColorScheme(
             primary = palette.accent,
-            onPrimary = Color(0xFF10240F),
+            onPrimary = palette.onAccent,
             secondary = palette.accent,
             secondaryContainer = palette.accentSoft,
             onSecondaryContainer = palette.accent,
@@ -71,7 +40,7 @@ fun ListTheme(dark: Boolean, content: @Composable () -> Unit) {
     } else {
         lightColorScheme(
             primary = palette.accent,
-            onPrimary = Color.White,
+            onPrimary = palette.onAccent,
             secondary = palette.accent,
             secondaryContainer = palette.accentSoft,
             onSecondaryContainer = palette.accent,
