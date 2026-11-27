@@ -129,15 +129,42 @@ fun HomeScreen(
             )
 
             val dayTodos = store.itemsFor(selectedDay)
-            if (dayTodos.isEmpty()) {
-                EmptyState(isToday = selectedDay == today)
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    items(dayTodos, key = { it.id }) { todo ->
+            val weekUnfinished = store.items
+                .filter { !it.done && it.date in days }
+                .sortedWith(compareBy({ it.date }, { it.minutes }, { it.id }))
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (dayTodos.isEmpty()) {
+                    item(key = "selected-empty") {
+                        EmptyState(isToday = selectedDay == today)
+                    }
+                } else {
+                    items(dayTodos, key = { "selected-${it.id}" }) { todo ->
+                        TodoRow(
+                            todo = todo,
+                            onToggle = { store.toggle(todo.id) },
+                            onClick = {
+                                editing = todo
+                                editorOpen = true
+                            },
+                        )
+                    }
+                }
+
+                item(key = "unfinished-header") {
+                    UnfinishedHeader(count = weekUnfinished.size)
+                }
+
+                if (weekUnfinished.isEmpty()) {
+                    item(key = "unfinished-empty") {
+                        UnfinishedEmpty()
+                    }
+                } else {
+                    items(weekUnfinished, key = { "unfinished-${it.id}" }) { todo ->
                         TodoRow(
                             todo = todo,
                             onToggle = { store.toggle(todo.id) },
@@ -480,7 +507,7 @@ private fun TodoRow(todo: Todo, onToggle: () -> Unit, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = todo.timeText,
+                    text = todo.dateTimeText,
                     fontSize = 12.sp,
                     color = if (todo.done) palette.textSecondary else palette.accent,
                     fontWeight = FontWeight.Medium,
@@ -500,7 +527,7 @@ private fun TodoRow(todo: Todo, onToggle: () -> Unit, onClick: () -> Unit) {
 private fun EmptyState(isToday: Boolean) {
     val palette = LocalListPalette.current
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -515,6 +542,53 @@ private fun EmptyState(isToday: Boolean) {
             color = palette.textSecondary.copy(alpha = 0.75f),
         )
     }
+}
+
+/** 「未完成待办事项」分区标题：汇总今天起 7 天内所有未完成事项。 */
+@Composable
+private fun UnfinishedHeader(count: Int) {
+    val palette = LocalListPalette.current
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 14.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(palette.border)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "未完成待办事项",
+                fontSize = 19.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.textPrimary,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = if (count == 0) "已全部完成" else "$count 项",
+                fontSize = 12.sp,
+                color = palette.textSecondary,
+            )
+        }
+        Text(
+            text = "今天起 7 天内所有没做完的事项（含选中的那天）",
+            fontSize = 11.5.sp,
+            color = palette.textSecondary,
+        )
+    }
+}
+
+@Composable
+private fun UnfinishedEmpty() {
+    val palette = LocalListPalette.current
+    Text(
+        text = "这几天没有未完成的事项",
+        fontSize = 13.sp,
+        color = palette.textSecondary,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+    )
 }
 
 @Composable

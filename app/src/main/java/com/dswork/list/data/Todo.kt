@@ -12,6 +12,10 @@ data class Todo(
 ) {
     val timeText: String
         get() = "%02d:%02d".format(minutes / 60, minutes % 60)
+
+    /** 列表里显示的「日期 + 星期 + 时间」，例如：11月28日周六 8:00 */
+    val dateTimeText: String
+        get() = "${date.monthValue}月${date.dayOfMonth}日${date.weekdayCn()} ${minutes / 60}:%02d".format(minutes % 60)
 }
 
 fun LocalDate.weekdayCn(): String = "周" + "一二三四五六日"[dayOfWeek.value - 1]
